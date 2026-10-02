@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eli Basketball Scorekeeper</title>
+<style>
+body{margin:0;background:#f4f1eb;color:#252525;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:620px;margin:auto;padding:20px 15px 35px}
+h1{text-align:center;margin:5px 0 2px;font-size:30px}.sub{text-align:center;color:#777;margin-bottom:18px}
+.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:5px}.tab{border:0;border-radius:12px;padding:11px 15px;background:#dfdbd3;font-weight:700;white-space:nowrap}.active{background:#252525;color:white}
+.card{background:white;border-radius:22px;padding:20px;margin-top:10px;box-shadow:0 4px 18px #00000012}
+.head{display:flex;justify-content:space-between;align-items:center}.name{font-size:20px;font-weight:800}
+.total{text-align:center;padding:20px 0 25px}.number{font-size:76px;font-weight:850;line-height:1}.label{color:#888;font-size:12px;letter-spacing:1px}
+.buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.score{border:0;border-radius:18px;background:#eeeae3;padding:22px 5px;font-size:30px;font-weight:800}.score small{display:block;font-size:11px;color:#777;margin-top:3px}
+.actions{display:flex;gap:8px;margin-top:16px}.small{border:0;border-radius:10px;background:#eeeae3;padding:10px 12px}
+.log{border-top:1px solid #eee;margin-top:18px;padding-top:13px}.row{display:flex;justify-content:space-between;padding:6px 0;color:#666}
+.add{width:100%;margin-top:12px;padding:14px;border:2px dashed #bbb5ac;background:transparent;border-radius:14px;font-weight:700}
+.note{text-align:center;color:#999;font-size:12px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Eli's Basketball</h1><div class="sub">Personal points</div>
+<div class="tabs" id="tabs"></div>
+<div class="card">
+<div class="head"><div class="name" id="name"></div><button class="small" id="rename">Rename</button></div>
+<div class="total"><div class="number" id="total">0</div><div class="label">POINTS</div></div>
+<div class="buttons">
+<button class="score" id="one">+1<small>FREE THROW</small></button>
+<button class="score" id="two">+2<small>FIELD GOAL</small></button>
+<button class="score" id="three">+3<small>THREE-POINTER</small></button>
+</div>
+<div class="actions"><button class="small" id="undo">↩ Undo last</button><button class="small" id="reset">Reset game</button></div>
+<div class="log" id="log"></div>
+</div>
+<button class="add" id="add">＋ Add another game</button>
+<div class="note">Scores save automatically in this browser.</div>
+</div>
+<script>
+var games=[{name:"Game 1",points:0,plays:[]}],active=0;
+try{var saved=JSON.parse(localStorage.getItem("eliBasketball"));if(saved){games=saved.games;active=saved.active||0}}catch(e){}
+function save(){try{localStorage.setItem("eliBasketball",JSON.stringify({games:games,active:active}))}catch(e){}}
+function render(){
+ var tabs=document.getElementById("tabs");tabs.innerHTML="";
+ games.forEach(function(g,i){var b=document.createElement("button");b.className="tab"+(i===active?" active":"");b.textContent=g.name;b.onclick=function(){active=i;save();render()};tabs.appendChild(b)});
+ var g=games[active];document.getElementById("name").textContent=g.name;document.getElementById("total").textContent=g.points;
+ var log=document.getElementById("log");
+ if(!g.plays.length){log.innerHTML='<span style="color:#999">No points recorded yet.</span>';return}
+ log.innerHTML="<b>Scoring log</b>"+g.plays.map(function(p,i){return '<div class="row"><span>Basket '+(i+1)+'</span><b>+'+p+'</b></div>'}).join("");
+}
+function score(n){games[active].points+=n;games[active].plays.push(n);save();render()}
+document.getElementById("one").onclick=function(){score(1)};
+document.getElementById("two").onclick=function(){score(2)};
+document.getElementById("three").onclick=function(){score(3)};
+document.getElementById("undo").onclick=function(){var g=games[active];if(g.plays.length){g.points-=g.plays.pop();save();render()}};
+document.getElementById("reset").onclick=function(){if(confirm("Reset this game?")){games[active].points=0;games[active].plays=[];save();render()}};
+document.getElementById("add").onclick=function(){games.push({name:"Game "+(games.length+1),points:0,plays:[]});active=games.length-1;save();render()};
+document.getElementById("rename").onclick=function(){var n=prompt("Game name:",games[active].name);if(n&&n.trim()){games[active].name=n.trim();save();render()}};
+render();
+</script>
+</body>
+</html>
